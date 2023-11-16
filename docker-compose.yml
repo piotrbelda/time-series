@@ -3,6 +3,7 @@ version: "3.8"
 
 services:
   mlflow:
+    image: mlflow
     container_name: mlflow
     build:
       context: ./docker/mlflow
@@ -11,7 +12,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./src:/home/mlflow/mlflow/files
+      - ./src:/home/mlflow/mlflow
     depends_on:
       - db
 
