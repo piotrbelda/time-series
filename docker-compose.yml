@@ -2,9 +2,24 @@ version: "3.8"
 
 
 services:
+  airflow:
+    container_name: airflow
+    image: airflow
+    build:
+      context: ./docker/airflow
+      dockerfile: Dockerfile
+    env_file: .env
+    ports:
+      - 8080:8080
+    volumes:
+      - ./src/dags:/opt/airflow/dags
+    depends_on:
+      - db
+      - mlflow
+
   mlflow:
-    image: mlflow
     container_name: mlflow
+    image: mlflow
     build:
       context: ./docker/mlflow
       dockerfile: Dockerfile
