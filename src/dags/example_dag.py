@@ -1,4 +1,3 @@
-import json
 import time
 from datetime import datetime, timedelta
 
@@ -8,11 +7,6 @@ from airflow.decorators import task
 from mlflow import MlflowClient
 
 client = MlflowClient()
-
-
-def decorator_test(func):
-    with mlflow.start_run(nested=True):
-        func()
 
 
 with DAG(
@@ -28,14 +22,13 @@ with DAG(
         run = mlflow.start_run()
         return {"run_id": run.info.run_id}
 
-    # @decorator_test
+
     @task(task_id="test-1")
     def test_1():
         print("sleeping 1")
         time.sleep(1)
 
 
-    # @decorator_test
     @task(task_id="test-2")
     def test_2():
         print("sleeping 2")
