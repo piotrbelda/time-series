@@ -1,0 +1,19 @@
+name: "Continuous Integration"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check docker health
+        run: docker run hello-world
+
+      - name: Print variables
+        run: echo "${{ vars.GH_VARIABLE }} --- ${{ secrets.GH_SECRET }}"
