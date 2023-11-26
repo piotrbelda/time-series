@@ -43,3 +43,29 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5433:5432
+
+  # hadoop services
+
+  hadoop-namenode:
+    container_name: hadoop-namenode
+    image: hadoop-namenode
+    build:
+      context: ./docker/hadoop/hadoop-namenode
+      dockerfile: Dockerfile
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+          max-file: "5"
+          max-size: "10m"
+    ports:
+      - "32763:9870"
+    volumes:
+      - ./mnt/hadoop/namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=hadoop_cluster
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "namenode", "9870" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
