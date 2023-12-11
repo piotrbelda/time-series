@@ -19,6 +19,7 @@ services:
     depends_on:
       - db
       - mlflow
+      - redis
 
   mlflow:
     container_name: mlflow

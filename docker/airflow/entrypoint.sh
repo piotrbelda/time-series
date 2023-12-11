@@ -15,5 +15,8 @@ airflow scheduler &> /dev/null &
 # Celery worker
 airflow celery worker &
 
+# setup connection path for downloaded files
+airflow connections add "taxi_data" --conn-uri "path://:@:/?path=/opt/airflow/dags/files"
+
 # run webserver
 exec airflow webserver
