@@ -12,5 +12,8 @@ airflow users create -e "admin@airflow.com" -f "airflow" -l "airflow" -p "airflo
 # run scheduler
 airflow scheduler &> /dev/null &
 
+# Celery worker
+airflow celery worker &
+
 # run webserver
 exec airflow webserver
