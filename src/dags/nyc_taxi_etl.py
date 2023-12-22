@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.resolve()))
 
-from taxi.taxi_parser import get_latest_taxi_data_url
+from app.taxi_parser import get_latest_taxi_data_url
 
 
 def get_latest_taxi_data_from_db():

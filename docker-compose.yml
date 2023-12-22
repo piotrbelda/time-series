@@ -14,9 +14,11 @@ services:
     ports:
       - 8080:8080
     volumes:
+      - ./src/app:/opt/airflow/app
       - ./src/dags:/opt/airflow/dags
-      - ./src/taxi:/opt/airflow/taxi
       - ./src/files:/opt/airflow/files
+      - ./src/alembic:/opt/airflow/alembic
+      - ./src/alembic.ini:/opt/airflow/alembic.ini
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
     depends_on:
       - db
