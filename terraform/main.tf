@@ -8,13 +8,14 @@ terraform {
 }
 
 provider "google" {
-  project = "time-series-pb"
-  region  = "europe-central2-a"
+  credentials = file(var.credentials)
+  project     = var.project
+  region      = var.region
 }
 
 resource "google_storage_bucket" "test-bucket" {
-  name          = "time-series-test-bucket"
-  location      = "EU"
+  name          = var.gcs_bucket_name
+  location      = var.location
   force_destroy = true
 
   lifecycle_rule {
@@ -34,4 +35,9 @@ resource "google_storage_bucket" "test-bucket" {
       type = "AbortIncompleteMultipartUpload"
     }
   }
+}
+
+resource "google_bigquery_dataset" "test-dataset" {
+  dataset_id = var.bq_dataset_name
+  location   = var.location
 }
