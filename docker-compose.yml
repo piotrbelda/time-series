@@ -9,8 +9,8 @@ services:
       context: ./docker/airflow
       dockerfile: Dockerfile
     env_file:
-      - ./docker/mlflow.env
-      - ./docker/airflow.env
+      - ./env/mlflow.env
+      - ./env/airflow.env
     ports:
       - 8080:8080
     volumes:
@@ -31,7 +31,7 @@ services:
     build:
       context: ./docker/mlflow
       dockerfile: Dockerfile
-    env_file: ./docker/mlflow.env
+    env_file: ./env/mlflow.env
     ports:
       - 8000:8000
     volumes:
