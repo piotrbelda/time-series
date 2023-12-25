@@ -12,11 +12,13 @@ airflow users create -e "admin@airflow.com" -f "airflow" -l "airflow" -p "airflo
 # run scheduler
 airflow scheduler &> /dev/null &
 
-# Celery worker
+# start Celery worker
 airflow celery worker &
 
-# setup connection path for downloaded files
+# connections setup
 airflow connections add "taxi_data" --conn-uri "path://:@:/?path=/opt/airflow/files"
+airflow connections add "postgres_db" \
+        --conn-uri "postgresql://${TAXI_DB_USER}:${TAXI_DB_PASSWORD}@${TAXI_DB_HOST}:${TAXI_DB_PORT}/${TAXI_DB_NAME}"
 
 # run webserver
 exec airflow webserver

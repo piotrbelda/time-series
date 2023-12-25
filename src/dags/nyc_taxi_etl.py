@@ -1,16 +1,16 @@
 from datetime import datetime, timedelta
 import json
 import os
+import re
 
+import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
 from airflow.exceptions import AirflowSkipException
 from airflow.operators.bash import BashOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.base import BaseHook
-import pandas as pd
-
-import re
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 import sys
 from pathlib import Path
@@ -76,7 +76,10 @@ with DAG(
 
     @task(task_id="load")
     def load():
-        pass
+        df = pd.read_parquet(FILE_PATH)
+        ph = PostgresHook(
+            postgres_conn_id="postgres_db"
+        )
 
     file_presence_check = FileSensor(
         task_id="is_taxi_data_available",
