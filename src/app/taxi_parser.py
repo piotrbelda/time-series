@@ -18,7 +18,8 @@ def get_latest_taxi_data_url() -> str:
     yellow_taxi_data = Selector(text=latest_month_data)
     data_url = yellow_taxi_data.xpath("//li//a//@href").getall()[0]
     data_url = re.sub("%20$", "", data_url)
-    return data_url
+    # return data_url
+    return "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-10.parquet"
 
 
 def download_taxi_data(url: str):

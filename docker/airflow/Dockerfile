@@ -7,7 +7,7 @@ ARG OWNER=airflow
 ENV AIRFLOW_HOME=${AIRFLOW_HOME}
 ENV AIRFLOW__CORE__LOAD_EXAMPLES=False
 
-RUN apt-get update && apt-get install -y vim
+RUN apt-get update && apt-get install -y vim wget
 RUN pip install -U pip && \
     pip install apache-airflow[postgres,celery]==${AIRFLOW_VERSION} \
     --constraint https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.11.txt && \

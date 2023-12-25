@@ -1,12 +1,20 @@
 from sqlalchemy import Column, Boolean, DateTime, Integer, Numeric, SmallInteger
+from sqlalchemy.schema import PrimaryKeyConstraint
 
 from .base import Base
 
 
 class Trip(Base):
     __tablename__ = "trips"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "id",
+            "tpep_pickup",
+        ),
+        {"postgresql_partition_by": "RANGE (tpep_pickup)"}
+    )
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, autoincrement=True)
     vendor_id = Column(Integer)
     tpep_pickup = Column(DateTime, nullable=False)
     tpep_dropoff = Column(DateTime, nullable=False)
