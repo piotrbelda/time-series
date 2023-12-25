@@ -23,6 +23,23 @@ conn = BaseHook.get_connection("taxi_data")
 FILE_DIR = json.loads(conn._extra)["path"]
 FILE_PATH = os.path.join(FILE_DIR, FILE_NAME)
 
+cols_mapping = {
+    "VendorID": "vendor_id",
+    "tpep_pickup_datetime": "tpep_pickup",
+    "tpep_dropoff_datetime": "tpep_dropoff",
+    "passenger_count": "passenger_count",
+    "trip_distance": "trip_distance",
+    "RatecodeID": "rate_code_id",
+    "store_and_fwd_flag": "store_and_fwd_flag",
+    "PULocationID": "pu_location_id",
+    "DOLocationID": "do_location_id",
+    "payment_type": "payment_type",
+    "fare_amount": "fare_amount",
+    "extra": "extra",
+    "tip_amount": "tip_amount",
+    "total_amount": "total_amount",
+}
+
 
 def get_latest_taxi_data_from_db():
     return "2023-10"
@@ -52,7 +69,10 @@ with DAG(
     @task(task_id="transform")
     def transform():
         df = pd.read_parquet(FILE_PATH)
-        
+        df = df[list(cols_mapping.keys())]
+        df = df.rename(columns=cols_mapping)
+        assert df.columns.tolist() == list(cols_mapping.values())
+        df.to_parquet(FILE_PATH)
 
     @task(task_id="load")
     def load():
