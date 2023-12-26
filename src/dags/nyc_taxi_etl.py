@@ -46,7 +46,7 @@ with DAG(
         file_url = get_latest_taxi_data_url()
         new_data = parse_date_from_url(file_url)
         db_date = get_latest_taxi_data_from_db()
-        if db_date != new_data:
+        if db_date == new_data:
             raise AirflowSkipException
 
         return file_url

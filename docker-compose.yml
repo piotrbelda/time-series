@@ -20,6 +20,7 @@ services:
       - ./src/alembic:/opt/airflow/alembic
       - ./src/alembic.ini:/opt/airflow/alembic.ini
       - ./config/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./keys:/opt/airflow/keys
     depends_on:
       - db
       - mlflow

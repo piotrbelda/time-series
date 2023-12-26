@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y vim wget
 RUN pip install -U pip && \
     pip install apache-airflow[postgres,celery]==${AIRFLOW_VERSION} \
     --constraint https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.11.txt && \
-    pip install apache-airflow-providers-redis==3.4.1
+    pip install apache-airflow-providers-redis==3.4.1 && \
+    pip install apache-airflow-providers-google==10.12.0
 
 COPY ./requirements.txt /tmp
 RUN pip install -r /tmp/requirements.txt
