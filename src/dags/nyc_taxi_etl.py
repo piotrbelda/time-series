@@ -8,6 +8,7 @@ from airflow import DAG
 from airflow.decorators import task
 from airflow.exceptions import AirflowSkipException
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.base import BaseHook
 
@@ -34,14 +35,14 @@ def parse_date_from_url(url):
 
 
 with DAG(
-    dag_id="nyc_data",
+    dag_id="taxi_etl",
     start_date=datetime(2023, 1, 1),
     schedule=timedelta(days=30),
     catchup=False,
 ) as dag:
 
-    @task(task_id="check_new_data_availability")
-    def checkout_taxi_url():
+    @task(task_id="check")
+    def checkout_latest_taxi_url():
         file_url = get_latest_taxi_data_url()
         new_data = parse_date_from_url(file_url)
         db_date = get_latest_taxi_data_from_db()
@@ -50,7 +51,6 @@ with DAG(
 
         return file_url
 
-    @task(task_id="transform")
     def transform():
         df = pd.read_parquet(FILE_PATH)
         df = df[list(cols_mapping.keys())]
@@ -70,25 +70,32 @@ with DAG(
                     FOR VALUES FROM ('{year}-{month}-01') TO ('{year}-{month + 1}-01')
                 """
             )
-            df = pd.read_parquet(FILE_PATH).sample(10000)
-            df.to_sql("trips", con=session.bind, if_exists="append", index=False)
+            df = pd.read_parquet(FILE_PATH)
+            df = df[(df.tpep_pickup.dt.year == year) & (df.tpep_pickup.dt.month == month)]
+            BATCH_SIZE = 10000
+            for idx in range(0, len(df), BATCH_SIZE):
+                chunk = df.iloc[idx: idx + BATCH_SIZE]
+                chunk.to_sql("trips", con=session.bind, if_exists="append", index=False)
             session.commit()
         os.remove(FILE_PATH)
 
-    file_presence_check = FileSensor(
-        task_id="is_taxi_data_available",
+    file_check = FileSensor(
+        task_id="file_check",
         fs_conn_id="taxi_data",
         filepath=FILE_NAME,
         poke_interval=1,
         timeout=3,
     )
 
-    file_url = checkout_taxi_url()
+    url = checkout_latest_taxi_url()
     extract_phase = BashOperator(
         task_id="extract",
-        bash_command=f"wget -nc {file_url} -O {FILE_PATH}"
+        bash_command=f"wget -nc {url} -O {FILE_PATH}"
     )
-    transform_phase = transform()
-    load_phase = load(file_url)
+    transform_phase = PythonOperator(
+        task_id="transform",
+        python_callable=transform,
+    )
+    load_phase = load(url)
 
-    file_url >> extract_phase >> file_presence_check >> transform_phase >> load_phase
+    url >> extract_phase >> file_check >> transform_phase >> load_phase
