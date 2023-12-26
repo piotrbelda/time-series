@@ -20,7 +20,7 @@ airflow connections add "taxi_data" --conn-uri "path://:@:/?path=/opt/airflow/fi
 airflow connections add "postgres_db" \
         --conn-uri "postgresql://${TAXI_DB_USER}:${TAXI_DB_PASSWORD}@${TAXI_DB_HOST}:${TAXI_DB_PORT}/${TAXI_DB_NAME}"
 airflow connections add "google_cloud_connection" \
-        --conn-uri "google-cloud-platform://?key_path=${HOME}/keys/creds.json&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&project=time-series-pb&num_retries=2"
+        --conn-uri "google-cloud-platform://?key_path=${HOME}/keys/creds.json&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&project=${GCP_PROJECT_NAME}&num_retries=2"
 
 # run webserver
 exec airflow webserver
