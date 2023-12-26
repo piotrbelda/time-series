@@ -1,0 +1,16 @@
+cols_mapping = {
+    "VendorID": "vendor_id",
+    "tpep_pickup_datetime": "tpep_pickup",
+    "tpep_dropoff_datetime": "tpep_dropoff",
+    "passenger_count": "passenger_count",
+    "trip_distance": "trip_distance",
+    "RatecodeID": "rate_code_id",
+    "store_and_fwd_flag": "store_and_fwd_flag",
+    "PULocationID": "pu_location_id",
+    "DOLocationID": "do_location_id",
+    "payment_type": "payment_type",
+    "fare_amount": "fare_amount",
+    "extra": "extra",
+    "tip_amount": "tip_amount",
+    "total_amount": "total_amount",
+}

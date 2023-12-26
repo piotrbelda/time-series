@@ -10,35 +10,19 @@ from airflow.exceptions import AirflowSkipException
 from airflow.operators.bash import BashOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.base import BaseHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.resolve()))
 
 from app.taxi_parser import get_latest_taxi_data_url
+from app.consts import cols_mapping
+from app.db import Session
 
-FILE_NAME = "taxi_data.parquet"
 conn = BaseHook.get_connection("taxi_data")
+FILE_NAME = "taxi_data.parquet"
 FILE_DIR = json.loads(conn._extra)["path"]
 FILE_PATH = os.path.join(FILE_DIR, FILE_NAME)
-
-cols_mapping = {
-    "VendorID": "vendor_id",
-    "tpep_pickup_datetime": "tpep_pickup",
-    "tpep_dropoff_datetime": "tpep_dropoff",
-    "passenger_count": "passenger_count",
-    "trip_distance": "trip_distance",
-    "RatecodeID": "rate_code_id",
-    "store_and_fwd_flag": "store_and_fwd_flag",
-    "PULocationID": "pu_location_id",
-    "DOLocationID": "do_location_id",
-    "payment_type": "payment_type",
-    "fare_amount": "fare_amount",
-    "extra": "extra",
-    "tip_amount": "tip_amount",
-    "total_amount": "total_amount",
-}
 
 
 def get_latest_taxi_data_from_db():
@@ -63,7 +47,7 @@ with DAG(
         db_date = get_latest_taxi_data_from_db()
         if db_date != new_data:
             raise AirflowSkipException
-        
+
         return file_url
 
     @task(task_id="transform")
@@ -75,11 +59,21 @@ with DAG(
         df.to_parquet(FILE_PATH)
 
     @task(task_id="load")
-    def load():
-        df = pd.read_parquet(FILE_PATH)
-        ph = PostgresHook(
-            postgres_conn_id="postgres_db"
-        )
+    def load(url: str):
+        new_data = parse_date_from_url(url)
+        year, month = (int(num) for num in new_data.split("-"))
+        with Session() as session:
+            session.bind.execute(
+                f"""
+                    CREATE TABLE IF NOT EXISTS trips_{year}_{month}
+                    PARTITION OF trips
+                    FOR VALUES FROM ('{year}-{month}-01') TO ('{year}-{month + 1}-01')
+                """
+            )
+            df = pd.read_parquet(FILE_PATH).sample(10000)
+            df.to_sql("trips", con=session.bind, if_exists="append", index=False)
+            session.commit()
+        os.remove(FILE_PATH)
 
     file_presence_check = FileSensor(
         task_id="is_taxi_data_available",
@@ -95,6 +89,6 @@ with DAG(
         bash_command=f"wget -nc {file_url} -O {FILE_PATH}"
     )
     transform_phase = transform()
-    load_phase = load()
+    load_phase = load(file_url)
 
     file_url >> extract_phase >> file_presence_check >> transform_phase >> load_phase
