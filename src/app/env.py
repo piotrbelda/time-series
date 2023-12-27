@@ -1,5 +1,7 @@
 import os
 
+GCP_PROJECT_NAME=os.environ["GCP_PROJECT_NAME"]
+
 TAXI_DB_HOST=os.environ["TAXI_DB_HOST"]
 TAXI_DB_USER=os.environ["TAXI_DB_USER"]
 TAXI_DB_PASSWORD=os.environ["TAXI_DB_PASSWORD"]

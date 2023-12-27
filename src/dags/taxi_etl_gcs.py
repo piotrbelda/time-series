@@ -16,7 +16,7 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     schedule=timedelta(days=30),
     catchup=False,
-):
+) as dag:
     create = GCSCreateBucketOperator(
         task_id="create_gcs_bucket",
         bucket_name="time_series_airflow_test_bucket",
@@ -33,15 +33,16 @@ with DAG(
         gcp_conn_id="google_cloud_connection",
     )
 
-    sleep = PythonOperator(
-        task_id="sleep_30",
-        python_callable=sleep_,
-    )
+    # sleep = PythonOperator(
+    #     task_id="sleep_30",
+    #     python_callable=sleep_,
+    # )
 
-    delete = GCSDeleteBucketOperator(
-        task_id="delete_gcs_bucket",
-        bucket_name="time_series_airflow_test_bucket",
-        gcp_conn_id="google_cloud_connection",
-    )
+    # delete = GCSDeleteBucketOperator(
+    #     task_id="delete_gcs_bucket",
+    #     bucket_name="time_series_airflow_test_bucket",
+    #     gcp_conn_id="google_cloud_connection",
+    # )
 
-    create >> upload >> sleep >> delete
+    # create >> upload >> sleep >> delete
+    create >> upload
