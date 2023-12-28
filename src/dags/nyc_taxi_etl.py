@@ -11,6 +11,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.base import BaseHook
+from airflow.models.param import Param
 
 import sys
 from pathlib import Path
@@ -39,6 +40,9 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     schedule=timedelta(days=30),
     catchup=False,
+    params={
+        "date": Param("2023-10-01", type="string", format="date"),
+    }
 ) as dag:
 
     @task(task_id="check")
