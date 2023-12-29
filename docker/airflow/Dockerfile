@@ -1,6 +1,6 @@
 FROM python:3.11.6-slim
 
-ARG AIRFLOW_VERSION=2.7.3
+ARG AIRFLOW_VERSION=2.8.0
 ARG AIRFLOW_HOME=/opt/airflow
 ARG OWNER=airflow
 
