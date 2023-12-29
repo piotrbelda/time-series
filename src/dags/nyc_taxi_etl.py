@@ -27,8 +27,23 @@ FILE_DIR = json.loads(conn._extra)["path"]
 FILE_PATH = os.path.join(FILE_DIR, FILE_NAME)
 
 
-def get_latest_taxi_data_from_db():
-    return "2023-10"
+def get_latest_taxi_data_from_db() -> str:
+    with Session() as session:
+        results = session.bind.execute(
+            """
+                SELECT
+                    (regexp_matches(t.table_name, '\d{4}_\d{2}$'))[1]
+                FROM information_schema.tables t
+                WHERE t.table_schema='public'
+                AND t.table_name LIKE 'trips_%%';
+            """
+        ).fetchall()
+    dates = [date[0].split("_") for date in results]
+    dates = [[int(num) for num in date] for date in dates]
+    dates = sorted(dates, key=lambda array: (array[0], array[1]), reverse=True)
+    last_date = dates[0]
+    print(last_date)
+    return "-".join(str(num) for num in last_date)
 
 
 def parse_date_from_url(url):
@@ -42,7 +57,7 @@ with DAG(
     catchup=False,
     params={
         "date": Param("2023-10-01", type="string", format="date"),
-    }
+    },
 ) as dag:
 
     @task(task_id="check")
@@ -50,7 +65,7 @@ with DAG(
         file_url = get_latest_taxi_data_url()
         new_data = parse_date_from_url(file_url)
         db_date = get_latest_taxi_data_from_db()
-        if db_date == new_data:
+        if db_date != new_data:
             raise AirflowSkipException
 
         return file_url
