@@ -13,6 +13,8 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.base import BaseHook
 from airflow.models.param import Param
+from airflow.providers.google.cloud.operators.gcs import GCSCreateBucketOperator
+from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
 
 import sys
 from pathlib import Path
@@ -120,6 +122,23 @@ with DAG(
         task_id="transform",
         python_callable=transform,
     )
+
+    create_bucket = GCSCreateBucketOperator(
+        task_id="create_gcs_bucket",
+        bucket_name="time_series_airflow_test_bucket",
+        gcp_conn_id="google_cloud_connection",
+        location="EU",
+        storage_class="STANDARD",
+    )
+
+    upload_to_gcs = LocalFilesystemToGCSOperator(
+        task_id="upload_taxi_data",
+        src=FILE_PATH,
+        dst=FILE_NAME,
+        bucket="time_series_airflow_test_bucket",
+        gcp_conn_id="google_cloud_connection",
+    )
+
     load_phase = load(url)
 
-    url >> extract_phase >> file_check >> transform_phase >> load_phase
+    url >> extract_phase >> file_check >> transform_phase >> [load_phase, create_bucket >> upload_to_gcs]
