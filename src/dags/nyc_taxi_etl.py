@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
 import json
 import os
 import re
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 import pandas as pd
 from airflow import DAG
@@ -38,6 +39,9 @@ def get_latest_taxi_data_from_db() -> str:
                 AND t.table_name LIKE 'trips_%%';
             """
         ).fetchall()
+    if not results:
+        return None
+
     dates = [date[0].split("_") for date in results]
     dates = [[int(num) for num in date] for date in dates]
     dates = sorted(dates, key=lambda array: (array[0], array[1]), reverse=True)
@@ -65,7 +69,7 @@ with DAG(
         file_url = get_latest_taxi_data_url()
         new_data = parse_date_from_url(file_url)
         db_date = get_latest_taxi_data_from_db()
-        if db_date != new_data:
+        if db_date and db_date == new_data:
             raise AirflowSkipException
 
         return file_url
@@ -81,20 +85,21 @@ with DAG(
     def load(url: str):
         new_data = parse_date_from_url(url)
         year, month = (int(num) for num in new_data.split("-"))
+        dt = date(year, month, 1) + relativedelta(months=1)
         with Session() as session:
             session.bind.execute(
                 f"""
                     CREATE TABLE IF NOT EXISTS trips_{year}_{month}
                     PARTITION OF trips
-                    FOR VALUES FROM ('{year}-{month}-01') TO ('{year}-{month + 1}-01')
+                    FOR VALUES FROM ('{year}-{month}-01') TO ('{dt.year}-{dt.month + 1}-01')
                 """
             )
             df = pd.read_parquet(FILE_PATH)
             df = df[(df.tpep_pickup.dt.year == year) & (df.tpep_pickup.dt.month == month)]
             BATCH_SIZE = 10000
             for idx in range(0, len(df), BATCH_SIZE):
-                chunk = df.iloc[idx: idx + BATCH_SIZE]
-                chunk.to_sql("trips", con=session.bind, if_exists="append", index=False)
+                df_chunk = df.iloc[idx: idx + BATCH_SIZE]
+                df_chunk.to_sql("trips", con=session.bind, if_exists="append", index=False)
             session.commit()
         os.remove(FILE_PATH)
 
