@@ -1,0 +1,11 @@
+dbt_test:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('TAXI_DB_HOST') }}"
+      user: "{{ env_var('TAXI_DB_USER') }}"
+      password: "{{ env_var('TAXI_DB_PASSWORD') }}"
+      port: "{{ env_var('TAXI_DB_PORT') | int }}"
+      dbname: "{{ env_var('TAXI_DB_NAME') }}"
+      schema: public
