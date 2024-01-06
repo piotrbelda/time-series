@@ -56,3 +56,13 @@ services:
     image: redis:latest
     ports:
       - 6379:6379
+
+  streamlit:
+    container_name: streamlit
+    image: streamlit
+    build:
+      context: ./docker/streamlit
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    command: streamlit run app.py --server.port 5000
